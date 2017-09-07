@@ -1,17 +1,35 @@
-import React from 'react';
+import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import SortFilterPanel from './SortFilterPanel';
-import uuid from 'uuid';
-const TableHeader = ({ id, dataType, name, canFilter, canSort, canExport, style, className, sortFilterPanelIconClassName, onSortFilterPanelClick, headerTextClassName, data }) => {
-    let showSortFilterPanel = false;
-    return (
-        <th style={style} className={"re-th " + className} data-th-id={id}>
-            <span className={"re-th-name " + headerTextClassName}> {name} </span>
-            {(canFilter || canSort) && <span className="re-th-icon" onClick={onSortFilterPanelClick}> <i className={sortFilterPanelIconClassName} /> </span>}
-            <SortFilterPanel id={id} dataType={dataType} showSortFilterPanel={showSortFilterPanel} data={data} />
-        </th>
-    )
-};
+class TableHeader extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            showSortFilterPanel: false
+        };
+        this.onSortFilterPanelClick = this.onSortFilterPanelClick.bind(this);
+    }
+
+    onSortFilterPanelClick(e) {
+        e.preventDefault();
+        this.setState({ showSortFilterPanel: !this.state.showSortFilterPanel });
+    }
+
+    render() {
+        const { id, dataType, name, canFilter, canSort, style, className, sortFilterPanelIconClassName, headerTextClassName, data } = this.props;
+        return (
+            <th style={style} className={'re-th ' + className} data-th-id={id}>
+                <span className={'re-th-name ' + headerTextClassName}> {name} </span>
+                {(canFilter || canSort) && <a className="re-th-icon"
+                    onKeyDown={this.onSortFilterPanelClick}
+                    role="button"
+                    tabIndex={0}
+                    onClick={this.onSortFilterPanelClick}> <i className={sortFilterPanelIconClassName} /> </a>}
+                <SortFilterPanel id={id} dataType={dataType} showSortFilterPanel={this.state.showSortFilterPanel} data={data} />
+            </th>
+        );
+    }
+}
 
 TableHeader.propTypes = {
     id: PropTypes.string.isRequired,
@@ -25,7 +43,12 @@ TableHeader.propTypes = {
     className: PropTypes.string,
     headerTextClassName: PropTypes.string,
     style: PropTypes.object,
-    onSortFilterPanelClick: PropTypes.func
+    sortFilterPanelIcon: PropTypes.string,
+    ascIcon: PropTypes.string,
+    descIcon: PropTypes.string,
+    noSortIcon: PropTypes.string,
+    filterIcon: PropTypes.string,
+    filterAppliedIcon: PropTypes.string
 };
 
 TableHeader.defaultProps = {
@@ -36,7 +59,11 @@ TableHeader.defaultProps = {
     style: {},
     className: '',
     dataType: 'text',
-    headerTextClassName: ''
+    headerTextClassName: '',
+    showSortFilterPanel: false,
+    ascIcon: 'fa fa-sort-amount-asc',
+    descIcon: 'fa fa-sort-amount-desc',
+    noSortIcon: 'fa fa-sort'
 };
 
-export default TableHeader
+export default TableHeader;

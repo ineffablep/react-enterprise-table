@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import uuid from 'uuid';
 
 const onFilterPanelOkClick = () => {
 
@@ -25,18 +26,21 @@ const onFilterPanelItemSelect = () => {
 
 };
 
-const SortFilterPanel = ({ showSortFilterPanel, dataType, id, filterData }) => {
+const SortFilterPanel = ({ showSortFilterPanel, dataType, id, data }) => {
     let ascIcon = 'fa fa-sort-amount-asc',
         descIcon = 'fa fa-sort-amount-desc',
         ascText = 'Sort A to Z',
-        descText = 'Sort Z to A';
-    // uniqData = data ? [...new Set(data)] : [],
-    // filterData = uniqData.map(_ => { return { checked: false, value: _ } });
+        descText = 'Sort Z to A',
+        colData = data.map(_ => _[id]),
+        uniqData = data ? [...new Set(colData)] : [],
+        filterData = uniqData.map(_ => {
+            return { checked: false, value: _ };
+        });
 
     if (dataType) {
         if (dataType === 'text') {
             ascIcon = 'fa fa-sort-alpha-asc';
-            descIcon = 'fa fa-sort-alpha-desc'
+            descIcon = 'fa fa-sort-alpha-desc';
         } else if (dataType === 'number') {
             ascIcon = 'fa fa-sort-numeric-asc';
             descIcon = 'fa fa-sort-numeric-desc';
@@ -58,8 +62,24 @@ const SortFilterPanel = ({ showSortFilterPanel, dataType, id, filterData }) => {
             <div className="re-filter-panel">
                 <input type="search" placeholder="Search" className="re-filter-search" />
                 <div className="re-filter-select-panel">
-                    <label><input type="checkbox" onChange={onFilterPanelSelectAllItems} className="re-filter-checkbox-selectAll" /><span className="re-filter-paenl-selectAll-text"> Select All</span></label>)
-                    {filterData.map(_ => <label><input type="checkbox" className="re-filter-checkbox" checked={_.checked} onChange={onFilterPanelItemSelect} /><span className="re-filter-paenl-select-text"> {_.value} </span></label>)}
+                    <label htmlFor="selectAll">
+                        <input type="checkbox"
+                            onChange={onFilterPanelSelectAllItems}
+                            className="re-filter-checkbox-selectAll" />
+                        <span className="re-filter-paenl-selectAll-text"> Select All</span>
+                    </label>)
+                    {filterData.map(_ =>
+                        <div key={uuid.v4()}>
+                            <label htmlFor={'select_' + id + '_' + _.value}>
+                                <input type="checkbox"
+                                    name={'select_' + id + '_' + _.value}
+                                    id={'select_' + id + '_' + _.value}
+                                    className="re-filter-checkbox"
+                                    checked={_.checked} onChange={onFilterPanelItemSelect} />
+                                <span className="re-filter-paenl-select-text"> {_.value} </span>
+                            </label>
+                        </div>
+                    )}
                 </div>
             </div>
             <div className="re-sfp-action-btns">
@@ -73,11 +93,7 @@ SortFilterPanel.propTypes = {
     id: PropTypes.string.isRequired,
     showSortFilterPanel: PropTypes.bool,
     dataType: PropTypes.string,
-    data: PropTypes.array.isRequired,
-    filterData: PropTypes.arrayOf(PropTypes.shape({
-        checked: PropTypes.bool,
-        value: PropTypes.string,
-    }), )
+    data: PropTypes.array.isRequired
 };
 SortFilterPanel.defaultProps = {
     showSortFilterPanel: false,

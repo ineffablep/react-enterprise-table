@@ -8,13 +8,20 @@ import './index.css';
 
 export class Table extends Component {
     render() {
-        const { columns, data } = this.props;
+        const { columns, data, sortFilterPanelIcon, ascIcon, descIcon, noSortIcon, filterIcon, filterAppliedIcon } = this.props;
         return (
             <div className="re-table-container">
                 <table className="re-table">
                     <thead className="re-thead">
                         <tr className="re-thr">
-                            {columns.map(_ => <TableHeader {..._} key={uuid.v4()} data={data} />)}
+                            {columns.map(_ => <TableHeader {..._} key={uuid.v4()}
+                                data={data}
+                                ascIcon={ascIcon}
+                                descIcon={descIcon}
+                                noSortIcon={noSortIcon}
+                                filterIcon={filterIcon}
+                                filterAppliedIcon={filterAppliedIcon}
+                                sortFilterPanelIconClassName={sortFilterPanelIcon} />)}
                         </tr>
                     </thead>
                     <tbody className="re-tobdy">
@@ -22,7 +29,7 @@ export class Table extends Component {
                     </tbody>
                 </table>
             </div>
-        )
+        );
     }
 }
 Table.propTypes = {
@@ -40,9 +47,15 @@ Table.propTypes = {
         isPrimaryKey: PropTypes.bool,
         isRequireFiled: PropTypes.bool,
         className: PropTypes.string,
-        style: PropTypes.object,
+        style: PropTypes.object
     })).isRequired,
-    data: PropTypes.array.isRequired
+    data: PropTypes.array.isRequired,
+    sortFilterPanelIcon: PropTypes.string,
+    ascIcon: PropTypes.string,
+    descIcon: PropTypes.string,
+    noSortIcon: PropTypes.string,
+    filterIcon: PropTypes.string,
+    filterAppliedIcon: PropTypes.string
 };
 
 Table.defaultProps = {
