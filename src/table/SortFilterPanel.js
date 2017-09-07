@@ -2,40 +2,22 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import uuid from 'uuid';
 
-const onFilterPanelOkClick = () => {
-
-};
-
-const onFilterPanelSortAscClick = () => {
-
-};
-
-const onFilterPanelSortDescClick = () => {
-
-};
-
-const onFilterPanelSelectAllItems = () => {
-
-};
-
-const onFilterPanelCancelClick = () => {
-
-};
-
-const onFilterPanelItemSelect = () => {
-
-};
-
-const SortFilterPanel = ({ showSortFilterPanel, dataType, id, data }) => {
+const SortFilterPanel = ({
+    dataType,
+    id,
+    data,
+    width,
+    onSort,
+    onOk,
+    onCancel,
+    onSelectAllItems,
+    onFilterSearch,
+    onItemSelect
+     }) => {
     let ascIcon = 'fa fa-sort-amount-asc',
         descIcon = 'fa fa-sort-amount-desc',
         ascText = 'Sort A to Z',
-        descText = 'Sort Z to A',
-        colData = data.map(_ => _[id]),
-        uniqData = data ? [...new Set(colData)] : [],
-        filterData = uniqData.map(_ => {
-            return { checked: false, value: _ };
-        });
+        descText = 'Sort Z to A';
 
     if (dataType) {
         if (dataType === 'text') {
@@ -44,59 +26,67 @@ const SortFilterPanel = ({ showSortFilterPanel, dataType, id, data }) => {
         } else if (dataType === 'number') {
             ascIcon = 'fa fa-sort-numeric-asc';
             descIcon = 'fa fa-sort-numeric-desc';
+            ascText = 'Sort Smallest to Largest';
+            descText = 'Sort Largest to Smallest';
         }
     }
-    return showSortFilterPanel ? (
-        <div className="re-sfp">
+    console.log(data);
+    
+    return (
+        <div className="re-sfp" style={{ width: width }}>
             <div className="re-sort-panel">
-                <button className="re-sort-btn-asc" onClick={onFilterPanelSortAscClick}>
+                <button className="re-sort-btn-asc" onClick={() => onSort(id, 'asc')}>
                     <i className={ascIcon} />
                     <span className="re-sort-asc-text"> {ascText} </span>
-                </button>
-                <button className="re-sort-btn-desc" onClick={onFilterPanelSortDescClick}>
+                </button> <br />
+                <button className="re-sort-btn-desc" onClick={() => onSort(id, 'desc')}>
                     <i className={descIcon} />
                     <span className="re-sort-desc-text"> {descText} </span>
                 </button>
             </div>
-            <hr />
             <div className="re-filter-panel">
-                <input type="search" placeholder="Search" className="re-filter-search" />
+                <input type="search" placeholder="Search" onChange={onFilterSearch} className="re-filter-search" />
                 <div className="re-filter-select-panel">
-                    <label htmlFor="selectAll">
-                        <input type="checkbox"
-                            onChange={onFilterPanelSelectAllItems}
-                            className="re-filter-checkbox-selectAll" />
-                        <span className="re-filter-paenl-selectAll-text"> Select All</span>
+                    <input type="checkbox"
+                        onChange={onSelectAllItems}
+                        className="re-filter-checkbox-selectAll" />
+                    <label htmlFor="selectAll" className="re-filter-paenl-selectAll-text">
+                        Select All
                     </label>)
-                    {filterData.map(_ =>
+                    {data.map(_ =>
                         <div key={uuid.v4()}>
-                            <label htmlFor={'select_' + id + '_' + _.value}>
-                                <input type="checkbox"
-                                    name={'select_' + id + '_' + _.value}
-                                    id={'select_' + id + '_' + _.value}
-                                    className="re-filter-checkbox"
-                                    checked={_.checked} onChange={onFilterPanelItemSelect} />
-                                <span className="re-filter-paenl-select-text"> {_.value} </span>
+                            <input type="checkbox"
+                                name={'select_' + id + '_' + _.value}
+                                id={'select_' + id + '_' + _.value}
+                                className="re-filter-checkbox"
+                                checked={_.checked} onChange={(e) => onItemSelect(e, _)} />
+                            <label className="re-filter-paenl-select-text" htmlFor={'select_' + id + '_' + _.value}>
+                                {_.value}
                             </label>
                         </div>
                     )}
                 </div>
             </div>
             <div className="re-sfp-action-btns">
-                <button className="re-sfp-btn-ok" onClick={onFilterPanelOkClick}> OK </button>
-                <button className="re-sfp-btncancel" onClick={onFilterPanelCancelClick}> Cancel </button>
+                <button className="re-sfp-btn-ok" onClick={onOk}> OK </button>
+                <button className="re-sfp-btncancel" onClick={onCancel}> Cancel </button>
             </div>
         </div>
-    ) : null;
+    );
 };
 SortFilterPanel.propTypes = {
     id: PropTypes.string.isRequired,
-    showSortFilterPanel: PropTypes.bool,
     dataType: PropTypes.string,
-    data: PropTypes.array.isRequired
+    width: PropTypes.string,
+    data: PropTypes.array.isRequired,
+    onSort: PropTypes.func.isRequired,
+    onOk: PropTypes.func.isRequired,
+    onCancel: PropTypes.func.isRequired,
+    onItemSelect: PropTypes.func.isRequired,
+    onFilterSearch:PropTypes.func.isRequired,
+    onSelectAllItems: PropTypes.func.isRequired
 };
 SortFilterPanel.defaultProps = {
-    showSortFilterPanel: false,
     dataType: 'text',
     data: []
 };
