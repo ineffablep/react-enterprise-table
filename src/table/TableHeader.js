@@ -102,12 +102,10 @@ class TableHeader extends Component {
                 <button className={'re-th-name ' + headerTextClassName}
                     onClick={this.onHeaderSort}> {name} </button>
                 {
-                    (canFilter || canSort) && <a className="re-th-icon"
-                        onKeyDown={this.onSortFilterPanelClick}
-                        role="button"
+                    (canFilter || canSort) && <button className="re-th-name re-th-icon"
                         tabIndex={0}
                         onClick={this.onSortFilterPanelClick}>
-                        <i className={sortFilterPanelIconClassName} /> </a>
+                        <i className={sortFilterPanelIconClassName} /> </button>
                 }
                 {this.state.showSortFilterPanel && <SortFilterPanel
                     id={id}

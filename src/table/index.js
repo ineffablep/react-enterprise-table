@@ -14,6 +14,7 @@ export class Table extends Component {
         this.onFilter = this.onFilter.bind(this);
         this.onSort = this.onSort.bind(this);
         this.onFilterRemoveClick = this.onFilterRemoveClick.bind(this);
+        this.onGlobalSearchChange = this.onGlobalSearchChange.bind(this);
         let filteredData = this.props.filteredData || new Map();
         this.state = {
             data: this.props.data,
@@ -72,10 +73,33 @@ export class Table extends Component {
         this.setState({ filteredKeys: keys });
     }
 
+    onGlobalSearchChange(searchText) {
+        if (!searchText) {
+            this.setState({ data: this.state.backData });
+            return;
+        }
+        if (this.props.serverSideFilter) {
+            this.toolbarBtns.onGlobalSearchChange(searchText);
+        } else {
+            let searchResults = this.state.data.filter(_ => {
+                let res = false;
+                Object.values(_).forEach(item => {
+                    if (item.toUpperCase().includes(searchText.toUpperCase())) {
+                        res = true;
+                    }
+                });
+                return res;
+            });
+            this.setState({ data: searchResults });
+        }
+
+    }
+
     render() {
         const { columns, data, sortFilterPanelIcon, toolbarBtns, onEdit, onDelete,
             filterIcon, filterAppliedIcon, showRowActionBtns, RowActionBtnHeader } = this.props;
         const colSpan = showRowActionBtns ? columns.length + 1 : columns.length;
+        const { onGlobalSearchChange, ...rest } = toolbarBtns;
         return (
             <div className="re-table-container">
                 <table className="re-table">
@@ -86,7 +110,8 @@ export class Table extends Component {
                                     filteredKeys={this.state.filteredKeys}
                                     columns={columns}
                                     onFilterRemoveClick={this.onFilterRemoveClick} />
-                                <ToolbarBtns {...toolbarBtns} />
+                                <ToolbarBtns onGlobalSearchChange={this.onGlobalSearchChange} {...rest}
+                                    data={this.state.data} />
                             </th>
                         </tr>
                         <tr className="re-thr">
@@ -214,14 +239,19 @@ Table.propTypes = {
     onFilter: PropTypes.func,
     onEdit: PropTypes.func,
     onDelete: PropTypes.func,
+
     toolbarBtns: PropTypes.shape({
+        onGlobalSearchChange: PropTypes.func,
+        showGlobalSearch: PropTypes.bool,
         uploadBtn: PropTypes.shape({
             show: PropTypes.bool,
             title: PropTypes.string,
             icon: PropTypes.string,
             text: PropTypes.string,
             className: PropTypes.string,
-            onClick: PropTypes.func
+            onClick: PropTypes.func,
+            multiple: PropTypes.bool,
+            accept: PropTypes.string
         }),
         exportBtn: PropTypes.shape({
             show: PropTypes.bool,
@@ -257,10 +287,13 @@ Table.defaultProps = {
     showRowActionBtns: true,
     RowActionBtnHeader: 'Actions',
     toolbarBtns: {
+        showGlobalSearch: true,
         uploadBtn: {
             show: true,
             icon: 'fa fa-upload',
-            title: 'Upload Data'
+            title: 'Upload Data',
+            multiple: true,
+            accept: '*'
         },
         exportBtn: {
             show: true,
