@@ -11,6 +11,7 @@ const SortFilterPanel = ({
     onOk,
     onCancel,
     onSelectAllItems,
+    selectAllChecked,
     onFilterSearch,
     onItemSelect
      }) => {
@@ -30,8 +31,7 @@ const SortFilterPanel = ({
             descText = 'Sort Largest to Smallest';
         }
     }
-    console.log(data);
-    
+
     return (
         <div className="re-sfp" style={{ width: width }}>
             <div className="re-sort-panel">
@@ -45,10 +45,14 @@ const SortFilterPanel = ({
                 </button>
             </div>
             <div className="re-filter-panel">
-                <input type="search" placeholder="Search" onChange={onFilterSearch} className="re-filter-search" />
+                <div className="search">
+                    <span className="fa fa-search" />
+                    <input type="search" placeholder="Search" onChange={onFilterSearch} className="re-filter-search" />
+                </div>
                 <div className="re-filter-select-panel">
                     <input type="checkbox"
                         onChange={onSelectAllItems}
+                        checked={selectAllChecked}
                         className="re-filter-checkbox-selectAll" />
                     <label htmlFor="selectAll" className="re-filter-paenl-selectAll-text">
                         Select All
@@ -83,7 +87,8 @@ SortFilterPanel.propTypes = {
     onOk: PropTypes.func.isRequired,
     onCancel: PropTypes.func.isRequired,
     onItemSelect: PropTypes.func.isRequired,
-    onFilterSearch:PropTypes.func.isRequired,
+    onFilterSearch: PropTypes.func.isRequired,
+    selectAllChecked: PropTypes.bool,
     onSelectAllItems: PropTypes.func.isRequired
 };
 SortFilterPanel.defaultProps = {

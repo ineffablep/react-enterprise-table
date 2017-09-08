@@ -18,6 +18,31 @@ button {
     -ms-user-select:none;
     user-select:none;
 }
+.re-tbar-btn{
+    border:1px solid #ccc!important;
+}
+.re-action-btns button {
+    margin-right: 4px;
+}
+.re-td-action-btn button{
+    padding: 4px !important;
+}
+.re-excel-green{
+    color: green;
+}
+.re-edit{
+    color: #6371c7;
+}
+.re-delete{
+    color: #ee6b50;
+}
+.re-filtered-btns{
+    float: left;
+}
+.re-action-btns{
+    float: right;
+}
+
 .re-table-container{
     height: 400px;
     overflow: auto;
@@ -28,6 +53,10 @@ button {
     width:100%;
     display:table;
     border:1px solid #ccc;
+}
+.re-sort-ionc{
+    float: left;
+    margin:0 4px;
 }
 .re-table tr:nth-child(odd){background-color:#fff}
 .re-table tr:nth-child(even){background-color:#f1f1f1}
@@ -49,8 +78,8 @@ button {
 .re-tobdy{
 
 }
-.re-th-name{
-
+.re-th-name {
+    padding: 0 !important;
 }
 .re-th{
 
@@ -113,10 +142,10 @@ button {
 }
 .re-filter-search{
     padding:8px;
-    display:block;
     border:none;
     border-bottom:1px solid #ccc;
-    width:100%
+    width:100%;
+    text-indent: 20px;
 }
 .re-filter-select-panel{
     
@@ -139,4 +168,12 @@ input[type=checkbox].re-filter-checkbox , .re-filter-checkbox-selectAll{
 	position: relative;
 	top: 6px;
 	width: 24px;
+}
+.search { position: relative; }
+.search .fa-search { 
+  position: absolute;
+  color:#888888;
+  top: 9px;
+  left: 7px;
+  font-size: 15px;
 }

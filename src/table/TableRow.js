@@ -4,10 +4,14 @@ import TableCell from './TableCell';
 import uuid from 'uuid';
 
 
-const TableRow = ({ row, columns, className, style }) => {
+const TableRow = ({ row, columns, className, style, onEdit, onDelete }) => {
     return (
         <tr className={'re-tr ' + className} style={style} >
             {columns.map(_ => <TableCell key={uuid.v4()} id={_.id} row={row} />)}
+            <td className="re-td-action-btn">
+                <button onClick={() => onEdit(row)}> <i className="fa fa-edit re-edit" /> </button>
+                <button onClick={() => onDelete(row)}> <i className="fa fa-close re-delete" /> </button>
+            </td>
         </tr>
     );
 };
@@ -16,7 +20,9 @@ TableRow.propTypes = {
     columns: PropTypes.array.isRequired,
     row: PropTypes.object.isRequired,
     className: PropTypes.string,
-    style: PropTypes.object
+    style: PropTypes.object,
+    onDelete: PropTypes.func,
+    onEdit: PropTypes.func
 };
 
 TableRow.defaultProps = {
