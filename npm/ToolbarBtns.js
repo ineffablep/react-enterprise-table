@@ -1,49 +1,62 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import uuid from 'uuid';
 import { CSVLink } from 'react-csv';
+import RenderBtn from './RenderBtn';
+import uuid from 'uuid';
 
-var renderBtn = function renderBtn(_ref) {
-    var show = _ref.show,
-        title = _ref.title,
-        icon = _ref.icon,
-        text = _ref.text,
-        className = _ref.className,
-        onClick = _ref.onClick;
-
-    return show && React.createElement(
-        'button',
-        { key: uuid.v4(), className: 're-tbar-btn ' + className, onClick: onClick,
-            title: title },
-        ' ',
-        React.createElement('i', { className: icon, 'aria-hidden': 'true' }),
-        ' ',
-        text,
-        ' '
-    );
-};
-
-var ToolbarBtns = function ToolbarBtns(_ref2) {
-    var addNewBtn = _ref2.addNewBtn,
-        uploadBtn = _ref2.uploadBtn,
-        exportBtn = _ref2.exportBtn,
-        customBtns = _ref2.customBtns,
-        onGlobalSearchChange = _ref2.onGlobalSearchChange,
-        showGlobalSearch = _ref2.showGlobalSearch,
-        data = _ref2.data;
+var ToolbarBtns = function ToolbarBtns(_ref) {
+    var addNewBtn = _ref.addNewBtn,
+        uploadBtn = _ref.uploadBtn,
+        exportBtn = _ref.exportBtn,
+        customBtns = _ref.customBtns,
+        onSearch = _ref.onSearch,
+        showGlobalSearch = _ref.showGlobalSearch,
+        columnChooser = _ref.columnChooser,
+        showSelect = _ref.showSelect,
+        columns = _ref.columns,
+        data = _ref.data;
 
     return React.createElement(
         'div',
         { className: 're-action-btns' },
+        columnChooser && React.createElement(
+            'span',
+            { className: 're-column-chooser' },
+            React.createElement(RenderBtn, columnChooser),
+            showSelect && React.createElement(
+                'ul',
+                { className: 're-ul-col-chooser' },
+                columns && columns.map(function (column) {
+                    return React.createElement(
+                        'li',
+                        { key: uuid.v4() },
+                        React.createElement(
+                            'button',
+                            { className: 're-col-chooser',
+                                onClick: function onClick() {
+                                    return columnChooser.onColumnSelect(column);
+                                } },
+                            column.show && React.createElement('i', { className: 'fa fa-check' }),
+                            ' ',
+                            column.name
+                        )
+                    );
+                })
+            )
+        ),
         showGlobalSearch && React.createElement(
             'span',
             { className: 're-toolbar-search' },
             React.createElement('i', { className: 'fa fa-search' }),
             React.createElement('input', { type: 'search', className: 're-toolbar-search-input', placeholder: 'Search', onChange: function onChange(e) {
-                    return onGlobalSearchChange(e.target.value);
+                    return onSearch(e.target.value);
                 } })
         ),
-        addNewBtn && renderBtn(addNewBtn),
+        customBtns && customBtns.map(function (_) {
+            _.show = true;
+            return React.createElement(RenderBtn, Object.assign({}, _, { key: uuid.v4() }));
+        }),
+        addNewBtn && React.createElement(RenderBtn, addNewBtn),
         uploadBtn && React.createElement(
             'span',
             null,
@@ -70,16 +83,26 @@ var ToolbarBtns = function ToolbarBtns(_ref2) {
             CSVLink,
             { data: data },
             '  ',
-            exportBtn && renderBtn(exportBtn)
-        ),
-        customBtns && customBtns.map(function (_) {
-            _.show = true;
-            return renderBtn(_);
-        })
+            exportBtn && React.createElement(RenderBtn, exportBtn)
+        )
     );
 };
 
 ToolbarBtns.propTypes = {
+    showSelect: PropTypes.bool,
+    columns: PropTypes.array,
+    showGlobalSearch: PropTypes.bool,
+    onSearch: PropTypes.func,
+    data: PropTypes.array.isRequired,
+    columnChooser: PropTypes.shape({
+        show: PropTypes.bool,
+        icon: PropTypes.string,
+        title: PropTypes.string,
+        text: PropTypes.string,
+        className: PropTypes.string,
+        onClick: PropTypes.func,
+        onColumnSelect: PropTypes.func
+    }),
     uploadBtn: PropTypes.shape({
         show: PropTypes.bool,
         title: PropTypes.string,
@@ -112,10 +135,7 @@ ToolbarBtns.propTypes = {
         text: PropTypes.string,
         className: PropTypes.string,
         onClick: PropTypes.func
-    })),
-    showGlobalSearch: PropTypes.bool,
-    onGlobalSearchChange: PropTypes.func,
-    data: PropTypes.array.isRequired
+    }))
 };
 
 export default ToolbarBtns;

@@ -29,12 +29,15 @@ var SortFilterPanel = function SortFilterPanel(_ref) {
             descIcon = 'fa fa-sort-numeric-desc';
             ascText = 'Sort Smallest to Largest';
             descText = 'Sort Largest to Smallest';
+        } else if (dataType === 'date' || dataType === 'datetime') {
+            ascText = 'Sort Newest to Oldest';
+            descText = 'Sort Oldest to Newest';
         }
     }
 
     return React.createElement(
         'div',
-        { className: 're-sfp', style: { width: width } },
+        { className: 're-sfp', style: { width: width + 'px' } },
         React.createElement(
             'div',
             { className: 're-sort-panel' },
@@ -72,22 +75,28 @@ var SortFilterPanel = function SortFilterPanel(_ref) {
         React.createElement(
             'div',
             { className: 're-filter-panel' },
-            React.createElement(
+            (dataType !== 'checkbox' || dataType !== 'color' || dataType !== 'file' || dataType !== 'radio' || dataType !== 'range' || dataType !== 'reset' || dataType !== 'submit' || dataType !== 'hidden' || dataType !== 'image') && React.createElement(
                 'div',
                 { className: 'search' },
                 React.createElement('span', { className: 'fa fa-search' }),
-                React.createElement('input', { type: 'search', placeholder: 'Search', onChange: onFilterSearch, className: 're-filter-search' })
+                React.createElement('input', { type: 'search',
+                    placeholder: 'Search',
+                    onChange: onFilterSearch,
+                    className: 're-filter-search' })
             ),
             React.createElement(
                 'div',
                 { className: 're-filter-select-panel' },
                 React.createElement('input', { type: 'checkbox',
                     onChange: onSelectAllItems,
+                    name: 're-sp-selectAll',
+                    id: 're-sp-selectAll',
                     checked: selectAllChecked,
                     className: 're-filter-checkbox-selectAll' }),
                 React.createElement(
                     'label',
-                    { htmlFor: 'selectAll', className: 're-filter-paenl-selectAll-text' },
+                    { htmlFor: 're-sp-selectAll',
+                        className: 're-filter-paenl-selectAll-text' },
                     'Select All'
                 ),
                 ')',
@@ -104,7 +113,8 @@ var SortFilterPanel = function SortFilterPanel(_ref) {
                             } }),
                         React.createElement(
                             'label',
-                            { className: 're-filter-paenl-select-text', htmlFor: 'select_' + id + '_' + _.value },
+                            { className: 're-filter-paenl-select-text',
+                                htmlFor: 'select_' + id + '_' + _.value },
                             _.value
                         )
                     );
@@ -130,7 +140,7 @@ var SortFilterPanel = function SortFilterPanel(_ref) {
 SortFilterPanel.propTypes = {
     id: PropTypes.string.isRequired,
     dataType: PropTypes.string,
-    width: PropTypes.string,
+    width: PropTypes.number,
     data: PropTypes.array.isRequired,
     onSort: PropTypes.func.isRequired,
     onOk: PropTypes.func.isRequired,

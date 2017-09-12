@@ -1,6 +1,6 @@
 {
   "name": "react-enterprise-table",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Fully customizable Fastest Rendering Excel Style React Table supports Searching , Sorting, Filtering, Export , Import , Add, Edit and Delete",
   "repository": {
     "type": "git",

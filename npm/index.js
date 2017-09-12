@@ -1,7 +1,5 @@
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
-
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -15,8 +13,9 @@ import TableHeader from './TableHeader';
 import TableRow from './TableRow';
 import FilteredBtns from './FilteredBtns';
 import './index.css';
+import { searchData, sortData, setOptions } from './Util.js';
 import ToolbarBtns from './ToolbarBtns';
-import moment from 'moment';
+import Pagination from './Pagination';
 
 export var Table = function (_Component) {
     _inherits(Table, _Component);
@@ -30,70 +29,53 @@ export var Table = function (_Component) {
         _this.onSort = _this.onSort.bind(_this);
         _this.onFilterRemoveClick = _this.onFilterRemoveClick.bind(_this);
         _this.onGlobalSearchChange = _this.onGlobalSearchChange.bind(_this);
-        var filteredData = _this.props.filteredData || new Map();
-        _this.state = {
-            data: _this.props.data,
-            backData: _this.props.data,
-            filteredData: filteredData,
-            sortMap: new Map(),
-            filteredKeys: Array.from(filteredData.keys())
-        };
+        _this.onColumnChooserClick = _this.onColumnChooserClick.bind(_this);
+        _this.onColumnSelect = _this.onColumnSelect.bind(_this);
+        _this.onRowCheckChange = _this.onRowCheckChange.bind(_this);
+        _this.onSelectAllRowsChange = _this.onSelectAllRowsChange.bind(_this);
+        _this.onPaginationClick = _this.onPaginationClick.bind(_this);
+        _this.onPageSizeChangeClick = _this.onPageSizeChangeClick.bind(_this);
+        _this.dataLastUpdated = new Date();
+        _this.state = setOptions(props);
         return _this;
     }
 
     _createClass(Table, [{
         key: 'onSort',
         value: function onSort(id, type) {
-            if (this.props.serverSideSort) {
-                this.props.onSort(id, type);
+            var _props$sort = this.props.sort,
+                serverSideSort = _props$sort.serverSideSort,
+                onSort = _props$sort.onSort;
+
+            if (serverSideSort) {
+                onSort(id, type);
             } else {
                 var col = this.props.columns.find(function (_) {
                     return _.id === id;
                 });
                 if (col) {
-                    var sortData = this.sortData(id, col.dataType, type, col.dateFormat || 'DD/MM/YYY');
-                    this.setState({ data: sortData, backData: sortData });
+                    var sortedData = sortData(this.state.data, this.dataLastUpdated, id, col.dataType, type, col.dateFormat || 'dd/mm/yyyy');
+                    this.setState({ data: sortedData, dataCache: sortedData });
                 }
             }
-            var icon = this.props.noSortIcon;
-            if (type === 'asc') {
-                icon = this.props.ascIcon;
-            } else if (type === 'desc') {
-                icon = this.props.descIcon;
-            }
-            var map = this.state.sortMap;
-            map.set(id, { type: type, icon: icon });
-            this.setState({ sortMap: map });
+
+            this.updateSortIcon(id, type);
         }
     }, {
         key: 'onFilter',
         value: function onFilter(id, filteredData) {
-            var map = this.state.filteredData;
+            var filter = this.state.filter;
+            var map = filter.filteredData;
             map.set(id, filteredData);
-            this.setState({ filteredData: map, filteredKeys: Array.from(map.keys()) });
-            if (this.props.serverSideFilter) {
-                this.props.onFilter(this.state.filteredData);
-            } else {
-                var dataToFilter = this.state.backData;
-                this.state.filteredData.forEach(function (value, id) {
-                    var selectedValues = value.filter(function (_) {
-                        return _.checked;
-                    }).map(function (_) {
-                        return _.value;
-                    });
-                    if (selectedValues && selectedValues.length > 0) {
-                        dataToFilter = dataToFilter.filter(function (_) {
-                            return selectedValues.includes(_[id]);
-                        });
-                    }
-                });
-                this.setState({ data: dataToFilter });
-            }
+            filter.filteredData = map;
+            this.setState({ filter: filter, filteredKeys: Array.from(map.keys()) });
+            var filterResults = this.state.filter.onFilter(this.state.dataCache, this.state.filter.filteredData);
+            this.setState({ data: filterResults });
         }
     }, {
         key: 'onFilterRemoveClick',
         value: function onFilterRemoveClick(id) {
-            var fmap = this.state.filteredData;
+            var fmap = this.state.filter.filteredData;
             var fd = fmap.get(id);
             fd.forEach(function (_) {
                 return _.checked = false;
@@ -105,26 +87,82 @@ export var Table = function (_Component) {
             this.setState({ filteredKeys: keys });
         }
     }, {
+        key: 'onRowCheckChange',
+        value: function onRowCheckChange(checked, row) {
+            var data = this.state.data,
+                drow = data.find(function (_) {
+                return _.id === row.id;
+            }),
+                selectAllChecked = false;
+            drow.selected = checked;
+            selectAllChecked = data.every(function (_) {
+                return _.selected;
+            });
+            this.setState({ data: data, dataCache: data, selectAllChecked: selectAllChecked });
+        }
+    }, {
+        key: 'onSelectAllRowsChange',
+        value: function onSelectAllRowsChange(e) {
+            var data = this.state.data;
+            data.forEach(function (_) {
+                return _.selected = e.target.checked;
+            });
+            this.setState({ data: data, dataCache: data, selectAllChecked: e.target.checked });
+        }
+    }, {
         key: 'onGlobalSearchChange',
         value: function onGlobalSearchChange(searchText) {
             if (!searchText) {
-                this.setState({ data: this.state.backData });
+                this.setState({ data: this.state.dataCache });
                 return;
             }
-            if (this.props.serverSideFilter) {
-                this.toolbarBtns.onGlobalSearchChange(searchText);
+            if (this.state.toolbar.onGlobalSearchChange) {
+                this.state.toolbar.onGlobalSearchChange(searchText);
             } else {
-                var searchResults = this.state.data.filter(function (_) {
-                    var res = false;
-                    Object.values(_).forEach(function (item) {
-                        if (item.toUpperCase().includes(searchText.toUpperCase())) {
-                            res = true;
-                        }
-                    });
-                    return res;
-                });
-                this.setState({ data: searchResults });
+                var searchedData = searchData(searchText, this.state.data, this.state.columns);
+                this.setState({ data: searchedData });
             }
+        }
+    }, {
+        key: 'onColumnChooserClick',
+        value: function onColumnChooserClick() {
+            this.setState({ showSelect: !this.state.showSelect });
+        }
+    }, {
+        key: 'onColumnSelect',
+        value: function onColumnSelect(col) {
+            var columns = this.state.columns;
+            var column = columns.find(function (_) {
+                return _.id === col.id;
+            });
+            column.show = !column.show;
+            this.setState({ columns: columns });
+        }
+    }, {
+        key: 'onPaginationClick',
+        value: function onPaginationClick(pageNo) {
+            if (pageNo > 0 || pageNo < this.state.pagination.totalPages) {
+                var page = pageNo;
+                if (page < 1) {
+                    page = 1;
+                }
+                var total = Math.round(this.state.dataCache.length / this.state.pagination.limit);
+                if (page > total) {
+                    page = total;
+                }
+                var data = this.state.pagination.onPagerClick(this.state.dataCache, page, this.state.pagination.limit);
+                var pagination = this.state.pagination;
+                pagination.currentPage = page;
+                this.setState({ data: data, pagination: pagination });
+            }
+        }
+    }, {
+        key: 'onPageSizeChangeClick',
+        value: function onPageSizeChangeClick(selectedPageSize) {
+            var data = this.state.pagination.onPagerClick(this.state.dataCache, this.state.pagination.currentPage, selectedPageSize);
+            var pagination = this.state.pagination;
+            pagination.limit = selectedPageSize;
+            this.setState({ data: data, pagination: pagination });
         }
     }, {
         key: 'render',
@@ -132,158 +170,177 @@ export var Table = function (_Component) {
             var _this2 = this;
 
             var _props = this.props,
-                columns = _props.columns,
-                data = _props.data,
                 sortFilterPanelIcon = _props.sortFilterPanelIcon,
-                toolbarBtns = _props.toolbarBtns,
-                onEdit = _props.onEdit,
-                onDelete = _props.onDelete,
-                filterIcon = _props.filterIcon,
-                filterAppliedIcon = _props.filterAppliedIcon,
-                showRowActionBtns = _props.showRowActionBtns,
-                RowActionBtnHeader = _props.RowActionBtnHeader;
+                isLoading = _props.isLoading,
+                filter = _props.filter,
+                sort = _props.sort,
+                showRowSelectionCheckBox = _props.showRowSelectionCheckBox,
+                rowActionBtnHeader = _props.rowActionBtnHeader,
+                _state = this.state,
+                showSelect = _state.showSelect,
+                tableRow = _state.tableRow,
+                toolbar = _state.toolbar,
+                columns = _state.columns,
+                data = _state.data,
+                filteredKeys = _state.filteredKeys,
+                pagination = _state.pagination,
+                sortMap = _state.sortMap,
+                filteredData = _state.filteredData;
 
-            var colSpan = showRowActionBtns ? columns.length + 1 : columns.length;
 
-            var onGlobalSearchChange = toolbarBtns.onGlobalSearchChange,
-                rest = _objectWithoutProperties(toolbarBtns, ['onGlobalSearchChange']);
+            var colSpan = this.showRowActionBtns ? columns.length + 1 : columns.length;
+            colSpan = showRowSelectionCheckBox ? colSpan + 1 : colSpan;
+            toolbar.columnChooser.onClick = this.onColumnChooserClick;
+            toolbar.columnChooser.onColumnSelect = this.onColumnSelect;
 
             return React.createElement(
                 'div',
-                { className: 're-table-container' },
+                null,
                 React.createElement(
-                    'table',
-                    { className: 're-table' },
+                    'div',
+                    { className: 're-table-container' },
                     React.createElement(
-                        'thead',
-                        { className: 're-thead' },
+                        'table',
+                        { className: 're-table' },
                         React.createElement(
-                            'tr',
-                            { className: 're-tbar' },
+                            'thead',
+                            { className: 're-thead' },
                             React.createElement(
-                                'th',
-                                { colSpan: colSpan },
-                                React.createElement(FilteredBtns, {
-                                    filteredKeys: this.state.filteredKeys,
-                                    columns: columns,
-                                    onFilterRemoveClick: this.onFilterRemoveClick }),
-                                React.createElement(ToolbarBtns, Object.assign({ onGlobalSearchChange: this.onGlobalSearchChange }, rest, {
-                                    data: this.state.data }))
+                                'tr',
+                                { className: 're-tbar' },
+                                React.createElement(
+                                    'th',
+                                    { colSpan: colSpan },
+                                    React.createElement(FilteredBtns, {
+                                        filteredKeys: filteredKeys,
+                                        columns: columns,
+                                        onFilterRemoveClick: this.onFilterRemoveClick }),
+                                    React.createElement(ToolbarBtns, Object.assign({
+                                        onSearch: this.onGlobalSearchChange
+                                    }, toolbar, {
+                                        columns: columns,
+                                        showSelect: showSelect,
+                                        data: data }))
+                                )
+                            ),
+                            React.createElement(
+                                'tr',
+                                { className: 're-thr' },
+                                showRowSelectionCheckBox && React.createElement(
+                                    'th',
+                                    { className: 're-th ', 'data-th-id': 'selectAll' },
+                                    React.createElement('input', { type: 'checkbox', checked: this.state.selectAllChecked, onChange: this.onSelectAllRowsChange }),
+                                    ' '
+                                ),
+                                columns.map(function (_) {
+                                    return React.createElement(TableHeader, Object.assign({}, _, { key: uuid.v4()
+                                    }, _, {
+                                        data: data,
+                                        filterIcon: filter.icon,
+                                        filterAppliedIcon: filter.appliedIcon,
+                                        onFilter: _this2.onFilter,
+                                        sortInfo: sortMap.get(_.id) || { type: 'none', icon: sort.noSortIcon },
+                                        filteredData: filteredData && filteredData.get(_.id) ? filteredData.get(_.id) : [],
+                                        onSort: _this2.onSort,
+                                        sortFilterPanelIconClassName: sortFilterPanelIcon }));
+                                }),
+                                this.showRowActionBtns && React.createElement(
+                                    'th',
+                                    null,
+                                    ' ',
+                                    rowActionBtnHeader
+                                )
                             )
                         ),
                         React.createElement(
-                            'tr',
-                            { className: 're-thr' },
-                            columns.map(function (_) {
-                                return React.createElement(TableHeader, Object.assign({}, _, { key: uuid.v4(),
-                                    data: data,
-                                    filterIcon: filterIcon,
-                                    filterAppliedIcon: filterAppliedIcon,
-                                    onFilter: _this2.onFilter,
-                                    sortInfo: _this2.state.sortMap.get(_.id) || { type: 'none', icon: _this2.props.noSortIcon },
-                                    filteredData: _this2.state.filteredData && _this2.state.filteredData.get(_.id) ? _this2.state.filteredData.get(_.id) : [],
-                                    onSort: _this2.onSort,
-                                    sortFilterPanelIconClassName: sortFilterPanelIcon }));
-                            }),
-                            showRowActionBtns && React.createElement(
-                                'th',
+                            'tbody',
+                            { className: 're-tobdy' },
+                            !isLoading ? data.map(function (_) {
+                                return React.createElement(TableRow, Object.assign({ key: uuid.v4(),
+                                    columns: columns,
+                                    showRowSelectionCheckBox: showRowSelectionCheckBox,
+                                    onRowCheckChange: _this2.onRowCheckChange,
+                                    showRowActionBtns: _this2.showRowActionBtns,
+                                    row: _
+                                }, tableRow));
+                            }) : React.createElement(
+                                'tr',
                                 null,
-                                ' ',
-                                RowActionBtnHeader
+                                React.createElement(
+                                    'td',
+                                    { colSpan: colSpan,
+                                        className: 're-table-loader',
+                                        style: { textAlign: 'center' } },
+                                    React.createElement('i', { className: 'fa fa-spin fa-spinner fa-2x' })
+                                )
                             )
                         )
-                    ),
-                    React.createElement(
-                        'tbody',
-                        { className: 're-tobdy' },
-                        this.state.data.map(function (_) {
-                            return React.createElement(TableRow, { key: uuid.v4(),
-                                columns: columns,
-                                row: _,
-                                onEdit: onEdit,
-                                onDelete: onDelete });
-                        })
                     )
-                )
+                ),
+                React.createElement(Pagination, {
+                    totalPages: pagination.totalPages,
+                    totalRecords: pagination.totalRows,
+                    pageSize: pagination.size,
+                    pageLimit: pagination.limit,
+                    currentPage: pagination.currentPage,
+                    onPageSizeChangeClick: this.onPageSizeChangeClick,
+                    onPaginationClick: this.onPaginationClick
+                })
             );
         }
     }, {
-        key: 'sortData',
-        value: function sortData(id, dataType, sortType, dateFormat) {
-            if (dataType === 'number') {
-                if (sortType === 'asc') {
-                    return this.state.data.sort(function (a, b) {
-                        return a[id] - b[id];
-                    });
-                } else if (sortType === 'desc') {
-                    return this.state.data.sort(function (a, b) {
-                        return b[id] - a[id];
-                    });
-                }
-            } else if (dataType === 'date' || dataType === 'datetime') {
-                if (sortType === 'desc') {
-                    return this.state.data.sort(function (a, b) {
-                        var momentA = moment(a[id], dateFormat);
-                        var momentB = moment(b[id], dateFormat);
-                        if (momentA > momentB) {
-                            return 1;
-                        } else if (momentA < momentB) {
-                            return -1;
-                        } else {
-                            return 0;
-                        }
-                    });
-                } else if (sortType === 'asc') {
-                    return this.state.data.sort(function (a, b) {
-                        var momentA = moment(a[id], dateFormat);
-                        var momentB = moment(b[id], dateFormat);
-                        if (momentA < momentB) {
-                            return 1;
-                        } else if (momentA > momentB) {
-                            return -1;
-                        } else {
-                            return 0;
-                        }
-                    });
-                }
-            } else {
-                if (sortType === 'asc') {
-                    return this.state.data.sort(function (a, b) {
-                        var nameA = a[id].toUpperCase();
-                        var nameB = b[id].toUpperCase();
-                        if (nameA < nameB) {
-                            return -1;
-                        }
-                        if (nameA > nameB) {
-                            return 1;
-                        }
-                        return 0;
-                    });
-                } else if (sortType === 'desc') {
-                    return this.state.data.sort(function (a, b) {
-                        var nameA = a[id].toUpperCase();
-                        var nameB = b[id].toUpperCase();
-                        if (nameA > nameB) {
-                            return -1;
-                        }
-                        if (nameA < nameB) {
-                            return 1;
-                        }
-                        return 0;
-                    });
-                }
+        key: 'updateSortIcon',
+        value: function updateSortIcon(id, type) {
+            var _props$sort2 = this.props.sort,
+                noSortIcon = _props$sort2.noSortIcon,
+                ascIcon = _props$sort2.ascIcon,
+                descIcon = _props$sort2.descIcon;
+
+            var icon = noSortIcon;
+            if (type === 'asc') {
+                icon = ascIcon;
+            } else if (type === 'desc') {
+                icon = descIcon;
             }
-            return this.props.data;
+            var map = this.state.sortMap;
+            map.set(id, { type: type, icon: icon });
+            this.setState({ sortMap: map });
+        }
+    }, {
+        key: 'showRowActionBtns',
+        get: function get() {
+            var _props$tableRow = this.props.tableRow,
+                editBtn = _props$tableRow.editBtn,
+                deleteBtn = _props$tableRow.deleteBtn,
+                viewBtn = _props$tableRow.viewBtn,
+                customBtns = _props$tableRow.customBtns;
+
+
+            if (editBtn && editBtn.show) {
+                return true;
+            }
+            if (deleteBtn && deleteBtn.show) {
+                return true;
+            }
+            if (viewBtn && viewBtn.show) {
+                return true;
+            }
+            if (customBtns) {
+                return true;
+            }
+            return false;
         }
     }]);
 
     return Table;
 }(Component);
+
 Table.propTypes = {
     columns: PropTypes.arrayOf(PropTypes.shape({
         id: PropTypes.string.isRequired,
         dataType: PropTypes.string.isRequired,
         name: PropTypes.string,
+        show: PropTypes.bool,
         canFilter: PropTypes.bool,
         canSort: PropTypes.bool,
         canGroup: PropTypes.bool,
@@ -292,31 +349,93 @@ Table.propTypes = {
         canDelete: PropTypes.bool,
         isUnBoundColumn: PropTypes.bool,
         isPrimaryKey: PropTypes.bool,
+        isCheckBoxField: PropTypes.bool,
         isRequireFiled: PropTypes.bool,
         className: PropTypes.string,
         dateFormat: PropTypes.string,
         style: PropTypes.object
     })).isRequired,
     data: PropTypes.array.isRequired,
-    filteredData: PropTypes.any,
     sortFilterPanelIcon: PropTypes.string,
-    ascIcon: PropTypes.string,
-    descIcon: PropTypes.string,
-    noSortIcon: PropTypes.string,
-    filterIcon: PropTypes.string,
-    RowActionBtnHeader: PropTypes.string,
-    filterAppliedIcon: PropTypes.string,
-    serverSideFilter: PropTypes.bool,
-    serverSideSort: PropTypes.bool,
-    showRowActionBtns: PropTypes.bool,
-    onSort: PropTypes.func,
-    onFilter: PropTypes.func,
-    onEdit: PropTypes.func,
-    onDelete: PropTypes.func,
-
-    toolbarBtns: PropTypes.shape({
+    rowActionBtnHeader: PropTypes.string,
+    isLoading: PropTypes.bool,
+    showRowSelectionCheckBox: PropTypes.bool,
+    onSelectRowChange: PropTypes.func,
+    onSelectAllRowsChange: PropTypes.func,
+    sort: PropTypes.shape({
+        ascIcon: PropTypes.string,
+        descIcon: PropTypes.string,
+        noSortIcon: PropTypes.string,
+        serverSideSort: PropTypes.bool,
+        onSort: PropTypes.func
+    }),
+    filter: PropTypes.shape({
+        filteredData: PropTypes.any, //eslint-disable-line
+        icon: PropTypes.string,
+        appliedIcon: PropTypes.string,
+        onFilter: PropTypes.func
+    }),
+    pagination: PropTypes.shape({
+        limit: PropTypes.number,
+        totalRows: PropTypes.number,
+        currentPage: PropTypes.number,
+        size: PropTypes.arrayOf(PropTypes.number),
+        onPagerClick: PropTypes.func,
+        onSizeChange: PropTypes.func
+    }),
+    tableRow: PropTypes.shape({
+        className: PropTypes.string,
+        style: PropTypes.object,
+        editBtn: PropTypes.shape({
+            show: PropTypes.bool,
+            title: PropTypes.string,
+            icon: PropTypes.string,
+            text: PropTypes.string,
+            className: PropTypes.string,
+            onClick: PropTypes.func,
+            isLink: PropTypes.bool,
+            link: PropTypes.string
+        }),
+        viewBtn: PropTypes.shape({
+            show: PropTypes.bool,
+            title: PropTypes.string,
+            icon: PropTypes.string,
+            text: PropTypes.string,
+            className: PropTypes.string,
+            onClick: PropTypes.func,
+            isLink: PropTypes.bool,
+            link: PropTypes.string
+        }),
+        deleteBtn: PropTypes.shape({
+            show: PropTypes.bool,
+            title: PropTypes.string,
+            icon: PropTypes.string,
+            text: PropTypes.string,
+            className: PropTypes.string,
+            onClick: PropTypes.func,
+            isLink: PropTypes.bool,
+            link: PropTypes.string
+        }),
+        customBtns: PropTypes.arrayOf(PropTypes.shape({
+            title: PropTypes.string,
+            icon: PropTypes.string,
+            text: PropTypes.string,
+            className: PropTypes.string,
+            onClick: PropTypes.func,
+            isLink: PropTypes.bool,
+            link: PropTypes.string
+        }))
+    }),
+    toolbar: PropTypes.shape({
         onGlobalSearchChange: PropTypes.func,
         showGlobalSearch: PropTypes.bool,
+        columnChooser: PropTypes.shape({
+            show: PropTypes.bool,
+            icon: PropTypes.string,
+            title: PropTypes.string,
+            text: PropTypes.string,
+            className: PropTypes.string
+        }),
         uploadBtn: PropTypes.shape({
             show: PropTypes.bool,
             title: PropTypes.string,
@@ -332,8 +451,7 @@ Table.propTypes = {
             title: PropTypes.string,
             icon: PropTypes.string,
             text: PropTypes.string,
-            className: PropTypes.string,
-            onClick: PropTypes.func
+            className: PropTypes.string
         }),
         addNewBtn: PropTypes.shape({
             show: PropTypes.bool,
@@ -355,13 +473,52 @@ Table.propTypes = {
 
 Table.defaultProps = {
     data: [],
-    serverSideFilter: false,
-    serverSideSort: false,
+    showRowSelectionCheckBox: true,
+    isLoading: false,
     customToolbarActionBtns: [],
-    showRowActionBtns: true,
-    RowActionBtnHeader: 'Actions',
-    toolbarBtns: {
+    rowActionBtnHeader: 'Actions',
+    sort: {
+        ascIcon: 'fa fa-sort-amount-asc',
+        descIcon: 'fa fa-sort-amount-desc',
+        noSortIcon: 'fa fa-sort',
+        serverSideSort: false
+    },
+    filter: {
+        filterIcon: 'fa fa-filter',
+        appliedIcon: 'fa fa-filter',
+        serverSideFilter: false
+    },
+    pagination: {
+        totalRows: 0,
+        limit: 10,
+        currentPage: 1,
+        size: [10, 20, 30, 40, 50, 100, 500, 1000]
+
+    },
+    tableRow: {
+        editBtn: {
+            show: true,
+            icon: 'fa fa-edit',
+            title: 'Edit Record'
+        },
+        viewBtn: {
+            show: true,
+            icon: 'fa fa-eye',
+            title: 'View Record'
+        },
+        deleteBtn: {
+            show: true,
+            icon: 'fa fa-trash',
+            title: 'Delete Record'
+        }
+    },
+    toolbar: {
         showGlobalSearch: true,
+        columnChooser: {
+            show: true,
+            icon: 'fa fa-bars',
+            title: 'Choose Columns'
+        },
         uploadBtn: {
             show: true,
             icon: 'fa fa-upload',
@@ -379,10 +536,7 @@ Table.defaultProps = {
             icon: 'fa fa-plus-circle',
             title: 'Add New'
         }
-    },
-    ascIcon: 'fa fa-sort-amount-asc',
-    descIcon: 'fa fa-sort-amount-desc',
-    noSortIcon: 'fa fa-sort'
+    }
 };
 
 export default Table;
