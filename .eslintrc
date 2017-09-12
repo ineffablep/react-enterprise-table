@@ -1,6 +1,11 @@
 {
-  "extends": ["react-app", "plugin:jsx-a11y/recommended"],
-  "plugins": ["jsx-a11y"],
+  "extends": [
+    "react-app",
+    "plugin:jsx-a11y/recommended"
+  ],
+  "plugins": [
+    "jsx-a11y"
+  ],
   "env": {
     "browser": true,
     "es6": true,
@@ -22,19 +27,31 @@
     "spyOn": true
   },
   "rules": {
-    "brace-style": [1, "1tbs"],
-    "comma-style": [1, "last"],
+    "brace-style": [
+      1,
+      "1tbs"
+    ],
+    "comma-style": [
+      1,
+      "last"
+    ],
+    "no-mixed-operators": 0,
     "default-case": 1,
     "no-floating-decimal": 1,
     "no-undefined": 1,
     "radix": 2,
-    "space-before-function-paren": [1, "never"],
+    "space-before-function-paren": [
+      1,
+      "never"
+    ],
     "space-before-blocks": 1,
     "spaced-comment": [
       1,
       "always",
       {
-        "exceptions": ["-"]
+        "exceptions": [
+          "-"
+        ]
       }
     ],
     "valid-jsdoc": [
@@ -50,14 +67,20 @@
     "global-strict": 0,
     "no-alert": 2,
     "camelcase": 1,
-    "eqeqeq": [1, "allow-null"],
+    "eqeqeq": [
+      1,
+      "allow-null"
+    ],
     "no-empty": 1,
     "no-underscore-dangle": 2,
     "no-obj-calls": 1,
     "new-cap": 1,
     // "no-shadow": 1,
     "no-invalid-regexp": 1,
-    "comma-dangle": [1, "never"],
+    "comma-dangle": [
+      1,
+      "never"
+    ],
     "no-undef": 1,
     "no-unused-vars": 1,
     "no-use-before-define": 1,
@@ -67,17 +90,27 @@
     "no-debugger": 2,
     "no-caller": 1,
     "semi": 2,
-    "quotes": [1, "single", "avoid-escape"],
+    "quotes": [
+      1,
+      "single",
+      "avoid-escape"
+    ],
     "no-unreachable": 2,
     "eol-last": 1,
     "curly": 1,
     "dot-notation": 1,
     "yoda": 1,
-    "jsx-a11y/href-no-hash":0,
+    "jsx-a11y/href-no-hash": 0,
     "no-trailing-spaces": 1,
     "no-multi-spaces": 2,
-    "no-mixed-spaces-and-tabs": [2, "smart-tabs"],
-    "react/jsx-curly-spacing": [2, "never"],
+    "no-mixed-spaces-and-tabs": [
+      2,
+      "smart-tabs"
+    ],
+    "react/jsx-curly-spacing": [
+      2,
+      "never"
+    ],
     "react/jsx-max-props-per-line": [
       2,
       {
@@ -86,7 +119,10 @@
     ],
     "react/jsx-no-duplicate-props": 2,
     "react/jsx-no-undef": 2,
-    "jsx-quotes": [2, "prefer-double"],
+    "jsx-quotes": [
+      2,
+      "prefer-double"
+    ],
     "react/jsx-uses-react": 2,
     "react/jsx-uses-vars": 2,
     "react/no-danger": 2,

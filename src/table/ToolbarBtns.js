@@ -1,21 +1,48 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import uuid from 'uuid';
 import { CSVLink } from 'react-csv';
+import RenderBtn from './RenderBtn';
+import uuid from 'uuid';
 
-const renderBtn = ({ show, title, icon, text, className, onClick }) => {
-    return show && <button key={uuid.v4()} className={'re-tbar-btn ' + className} onClick={onClick}
-        title={title}> <i className={icon} aria-hidden="true" /> {text} </button>;
-};
-
-const ToolbarBtns = ({ addNewBtn, uploadBtn, exportBtn, customBtns, onGlobalSearchChange, showGlobalSearch, data }) => {
+const ToolbarBtns = ({
+    addNewBtn,
+    uploadBtn,
+    exportBtn,
+    customBtns,
+    onSearch,
+    showGlobalSearch,
+    columnChooser,
+    showSelect,
+    columns,
+    data }) => {
     return (
         <div className="re-action-btns">
+            {columnChooser && (
+                <span className="re-column-chooser">
+                    <RenderBtn {...columnChooser} />
+                    {showSelect && <ul className="re-ul-col-chooser">
+                        {
+                            columns && columns.map(column => {
+                                return (<li key={uuid.v4()}>
+                                    <button className="re-col-chooser"
+                                        onClick={() => columnChooser.onColumnSelect(column)}>
+                                        {column.show && <i className="fa fa-check" />} {column.name}
+                                    </button>
+                                </li>);
+                            })
+                        }
+                    </ul>}
+                </span>
+            )}
             {showGlobalSearch && <span className="re-toolbar-search">
                 <i className="fa fa-search" />
-                <input type="search" className="re-toolbar-search-input" placeholder="Search" onChange={(e) => onGlobalSearchChange(e.target.value)} />
+                <input type="search" className="re-toolbar-search-input" placeholder="Search" onChange={(e) => onSearch(e.target.value)} />
             </span>}
-            {addNewBtn && renderBtn(addNewBtn)}
+            {customBtns && customBtns.map(_ => {
+                _.show = true;
+                return <RenderBtn {..._} key={uuid.v4()} />;
+            })}
+            {addNewBtn && <RenderBtn {...addNewBtn} />}
             {uploadBtn && <span>
                 <label htmlFor="re-toolbar-file-input"
                     className={'re-toolbar-file-input ' + uploadBtn.className}>
@@ -35,16 +62,26 @@ const ToolbarBtns = ({ addNewBtn, uploadBtn, exportBtn, customBtns, onGlobalSear
                         className="re-toolbar-file-upload" />
                 }
             </span>}
-            <CSVLink data={data} >  {exportBtn && renderBtn(exportBtn)}</CSVLink>
-            {customBtns && customBtns.map(_ => {
-                _.show = true;
-                return renderBtn(_);
-            })}
+            <CSVLink data={data} >  {exportBtn && <RenderBtn {...exportBtn} />}</CSVLink>
         </div>
     );
 };
 
 ToolbarBtns.propTypes = {
+    showSelect: PropTypes.bool,
+    columns: PropTypes.array,
+    showGlobalSearch: PropTypes.bool,
+    onSearch: PropTypes.func,
+    data: PropTypes.array.isRequired,
+    columnChooser: PropTypes.shape({
+        show: PropTypes.bool,
+        icon: PropTypes.string,
+        title: PropTypes.string,
+        text: PropTypes.string,
+        className: PropTypes.string,
+        onClick: PropTypes.func,
+        onColumnSelect: PropTypes.func
+    }),
     uploadBtn: PropTypes.shape({
         show: PropTypes.bool,
         title: PropTypes.string,
@@ -77,10 +114,7 @@ ToolbarBtns.propTypes = {
         text: PropTypes.string,
         className: PropTypes.string,
         onClick: PropTypes.func
-    })),
-    showGlobalSearch: PropTypes.bool,
-    onGlobalSearchChange: PropTypes.func,
-    data: PropTypes.array.isRequired
+    }))
 };
 
 export default ToolbarBtns;

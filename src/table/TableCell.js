@@ -1,17 +1,20 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-
-
-const TableCell = ({ row, id, className, style }) => {
+import dateformat from 'dateformat';
+const TableCell = ({ row, column, className, style }) => {
+    let cellVal = row[column.id];
+    if (column.dataType && (column.dataType === 'date' || column.dataType === 'dateTime')) {
+        cellVal = dateformat(cellVal, column.dateFormat || 'dd/mm/yyyy');
+    }
     return (
-        <td className={'re-tc ' + className} style={style}> {row[id]} </td>
+        <td className={'re-tc ' + className} style={style}> {cellVal} </td>
     );
 };
 
 
 TableCell.propTypes = {
     row: PropTypes.object.isRequired,
-    id: PropTypes.string.isRequired,
+    column: PropTypes.object.isRequired,
     className: PropTypes.string,
     style: PropTypes.object
 };

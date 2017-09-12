@@ -1,6 +1,18 @@
 import React, { Component } from 'react';
 import Table from './table';
+const pageData = (data, page, limit) => {
+  if (page < 1) {
+    page = 1;
+  }
+  let total = Math.round(data.length / limit);
+  if (page > total) {
+    page = total;
+  }
+  let from = (page - 1) * limit,
+    to = page * limit;
 
+  return data.slice(from, to);
+};
 class App extends Component {
   render() {
     const columns = [{
@@ -17,17 +29,25 @@ class App extends Component {
       dataType: 'number',
       name: 'Age'
     }];
-    const data = [
-      { fname: "Test 1", dob: "17/08/1982", age: "35" },
-      { fname: "Test 2", dob: "17/08/1983", age: "34" },
-      { fname: "Test 3", dob: "17/08/1984", age: "33" },
-      { fname: "Test 4", dob: "17/08/1985", age: "32" },
-      { fname: "Test 5", dob: "17/08/1986", age: "31" },
-      { fname: "Test 6", dob: "17/08/1987", age: "30" }
-    ];
+    const data = [];
+    for (let i = 1; i < 100; i++) {
+      let dt = new Date(),
+        age = 35 + i;
+      dt.setFullYear(dt.getFullYear() - age);
+      data.push(
+        { fname: 'Test ' + i, dob: dt, age: age },
+      );
+    };
+    const pagination = {
+      limit: 20,
+      totalRows: 99,
+      currentPage: 1,
+      size: [20, 40, 60, 80, 100],
+      onPagerClick: pageData
+    };
     return (
       <div className="App">
-        <Table columns={columns} data={data} />
+        <Table columns={columns} data={data} pagination={pagination} />
       </div>
     );
   }
