@@ -33,8 +33,8 @@ const Pagination = ({ currentPage, totalPages, onPaginationClick, totalRecords, 
                     pageSize && pageSize.length > 0 &&
                     <span>
                         <button className="re-pagination-total-records"> Records per Page: </button>
-                        <select className="re-tbar-btn no-tb-border" value={this.pageLimit}
-
+                        <select className="re-tbar-btn no-tb-border"
+                            value={this.pageLimit}
                             onChange={(e) => onPageSizeChangeClick(parseInt(e.target.value, 10))}>
                             {
                                 pageSize.map(_ => {
