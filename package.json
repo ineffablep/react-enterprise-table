@@ -26,10 +26,10 @@
   ],
   "dependencies": {
     "dateformat": "^2.0.0",
-    "react": "^15.6.1",
+    "react": "^16.5.0",
     "react-csv": "^1.0.8",
-    "react-dom": "^15.6.1",
-    "react-router-dom": "^4.2.2"
+    "react-dom": "^16.5.0",
+    "react-router-dom": "^5.0.0"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
